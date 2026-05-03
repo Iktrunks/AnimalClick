@@ -22,6 +22,7 @@
             width: 100vw;
             height: 100vh;
             background: linear-gradient(to bottom, #4facfe 0%, #00f2fe 100%);
+            transition: background 0.8s ease;
             overflow: hidden;
         }
 
@@ -32,6 +33,7 @@
             height: 50%;
             background: linear-gradient(to bottom, #7cfc00 0%, #2e8b57 100%);
             border-top: 10px solid #55cc00;
+            transition: filter 0.8s ease;
         }
 
         .cloud {
@@ -138,8 +140,6 @@
             transition: transform 0.1s, background 0.2s;
         }
 
-        #mute-btn:active { transform: scale(0.9); }
-
         .btn {
             pointer-events: auto;
             background: #ff6b6b;
@@ -168,12 +168,12 @@
         #overlay {
             position: absolute;
             inset: 0;
-            background: rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.85);
             backdrop-filter: blur(8px);
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             z-index: 200;
             color: white;
             text-align: center;
@@ -201,21 +201,58 @@
             overflow: hidden;
         }
 
-        /* Colores de Maestría */
         .mastery-0 { border-color: rgba(255,255,255,0.1); opacity: 0.6; filter: grayscale(1); }
-        .mastery-1 { border-color: #cd7f32; background: rgba(205, 127, 50, 0.1); } /* Bronce */
-        .mastery-2 { border-color: #c0c0c0; background: rgba(192, 192, 192, 0.1); } /* Plata */
-        .mastery-3 { border-color: #ffd700; background: rgba(255, 215, 0, 0.1); } /* Oro */
-        .mastery-4 { border-color: #e5e4e2; background: rgba(229, 228, 226, 0.15); box-shadow: 0 0 10px rgba(255,255,255,0.2); } /* Platino/Maestro */
+        .mastery-1 { border-color: #cd7f32; background: rgba(205, 127, 50, 0.1); }
+        .mastery-2 { border-color: #c0c0c0; background: rgba(192, 192, 192, 0.1); }
+        .mastery-3 { border-color: #ffd700; background: rgba(255, 215, 0, 0.1); }
+        .mastery-4 { border-color: #e5e4e2; background: rgba(229, 228, 226, 0.15); box-shadow: 0 0 10px rgba(255,255,255,0.2); }
 
-        .achievement-grid {
+        .grid-container {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
             width: 100%;
-            max-width: 550px;
+            max-width: 650px;
             margin-top: 20px;
+            padding-bottom: 40px;
         }
+
+        .bg-card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 10px;
+            border: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .bg-card.selected { border-color: #4facfe; background: rgba(79, 172, 254, 0.2); }
+        .bg-card.locked { opacity: 0.5; cursor: not-allowed; filter: grayscale(0.8); }
+
+        .bg-preview {
+            width: 100%;
+            height: 60px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .tab-nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            background: rgba(255,255,255,0.1);
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .tab-btn.active { background: #4facfe; color: white; }
 
         .shake { animation: shake 0.2s ease-in-out; }
         @keyframes shake {
@@ -231,14 +268,15 @@
             100% { transform: scale(1); color: white; }
         }
 
-        #overlay::-webkit-scrollbar { width: 0; background: transparent; }
+        #overlay::-webkit-scrollbar { width: 8px; }
+        #overlay::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
     </style>
 </head>
 <body>
 
 <div id="game-container">
     <div id="clouds-container"></div>
-    <div class="grass-layer">
+    <div class="grass-layer" id="main-grass">
         <div id="flowers-container"></div>
     </div>
 
@@ -261,15 +299,49 @@
 
 <script>
     // --- ESTADO GLOBAL Y PERSISTENCIA ---
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'animal-clicker-v1';
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'animal-clicker-v2';
     
     let stats = JSON.parse(localStorage.getItem(appId + '-stats')) || {
         '🦋': 0, '🐇': 0, '🐦': 0, '🦊': 0, '🦌': 0, '⏳': 0
     };
     
     let highScore = localStorage.getItem(appId + '-highscore') || 0;
+    let currentBackground = localStorage.getItem(appId + '-bg-id') || 'default';
+    let currentTab = 'achievements';
 
-    // --- CONFIGURACIÓN DE LOGROS Y MAESTRÍAS ---
+    // --- CONFIGURACIÓN DE FONDOS ---
+    const BACKGROUNDS = {
+        'default': { name: 'Original', main: 'linear-gradient(to bottom, #4facfe 0%, #00f2fe 100%)', grass: 'hue-rotate(0deg)' },
+        // 🦋 Primavera
+        '🦋-1': { name: 'Pétalos', main: 'linear-gradient(to bottom, #ff9a9e 0%, #fad0c4 100%)', grass: 'hue-rotate(320deg) brightness(1.2)' },
+        '🦋-2': { name: 'Jardín Rosa', main: 'linear-gradient(to bottom, #fbc2eb 0%, #a6c1ee 100%)', grass: 'hue-rotate(280deg)' },
+        '🦋-3': { name: 'Floración', main: 'linear-gradient(120deg, #d4fc79 0%, #96e6a1 100%)', grass: 'hue-rotate(40deg) saturate(1.5)' },
+        '🦋-4': { name: 'Paraíso', main: 'linear-gradient(to top, #30cfd0 0%, #330867 100%)', grass: 'hue-rotate(180deg) brightness(0.8)' },
+        // 🐇 Verano
+        '🐇-1': { name: 'Pradera Sol', main: 'linear-gradient(to bottom, #fff1eb 0%, #ace0f9 100%)', grass: 'brightness(1.3)' },
+        '🐇-2': { name: 'Mediodía', main: 'linear-gradient(to bottom, #48c6ef 0%, #6f86d6 100%)', grass: 'hue-rotate(20deg)' },
+        '🐇-3': { name: 'Calor Real', main: 'linear-gradient(to top, #fccb90 0%, #d57eeb 100%)', grass: 'sepia(0.3) hue-rotate(10deg)' },
+        '🐇-4': { name: 'Oasis', main: 'linear-gradient(to right, #43e97b 0%, #38f9d7 100%)', grass: 'hue-rotate(60deg) contrast(1.2)' },
+        // 🐦 Cielo
+        '🐦-1': { name: 'Nubes Bajas', main: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)', grass: 'grayscale(0.2) opacity(0.8)' },
+        '🐦-2': { name: 'Azul Puro', main: 'linear-gradient(to top, #209cff 0%, #68e0cf 100%)', grass: 'hue-rotate(140deg)' },
+        '🐦-3': { name: 'Atardecer', main: 'linear-gradient(to top, #f83600 0%, #f9d423 100%)', grass: 'sepia(0.8) brightness(0.7)' },
+        '🐦-4': { name: 'Espacio Vio', main: 'linear-gradient(to top, #6a11cb 0%, #2575fc 100%)', grass: 'hue-rotate(240deg) brightness(0.5)' },
+        // 🦊 Otoño
+        '🦊-1': { name: 'Hojas Secas', main: 'linear-gradient(to top, #e6b980 0%, #eacda3 100%)', grass: 'sepia(0.6)' },
+        '🦊-2': { name: 'Cosecha', main: 'linear-gradient(to top, #ff0844 0%, #ffb199 100%)', grass: 'hue-rotate(-30deg) saturate(1.5)' },
+        '🦊-3': { name: 'Bosque Rojo', main: 'linear-gradient(to right, #f78ca0 0%, #f9748f 19%, #fd868c 60%, #fe9a8b 100%)', grass: 'hue-rotate(-50deg)' },
+        '🦊-4': { name: 'Ocaso Zorro', main: 'linear-gradient(to top, #303395 0%, #27ef9f 100%)', grass: 'invert(0.1) hue-rotate(200deg)' },
+        // 🦌 Invierno/Magia
+        '🦌-1': { name: 'Escarcha', main: 'linear-gradient(to top, #e6e9f0 0%, #eef1f5 100%)', grass: 'grayscale(0.8) brightness(1.2)' },
+        '🦌-2': { name: 'Lago Helado', main: 'linear-gradient(to top, #cfd9df 0%, #e2ebf0 100%)', grass: 'hue-rotate(190deg) brightness(1.1)' },
+        '🦌-3': { name: 'Aurora', main: 'linear-gradient(to top, #00c6fb 0%, #005bea 100%)', grass: 'hue-rotate(160deg) saturate(2)' },
+        '🦌-4': { name: 'Noche Mágica', main: 'linear-gradient(to top, #09203f 0%, #537895 100%)', grass: 'brightness(0.3) hue-rotate(220deg)' },
+        // ⏳ Tiempo
+        '⏳-1': { name: 'Tic-Tac', main: 'linear-gradient(to bottom, #606c88, #3f4c6b)', grass: 'grayscale(0.5)' },
+        '⏳-4': { name: 'Eternidad', main: 'linear-gradient(to bottom, #000000, #434343)', grass: 'grayscale(1) brightness(0.2)' }
+    };
+
     const MASTERIES = [
         { name: 'Novato', color: '#888', min: 0 },
         { name: 'Bronce', color: '#cd7f32', min: 1 },
@@ -291,10 +363,7 @@
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     const masterGain = audioCtx.createGain();
     masterGain.connect(audioCtx.destination);
-    
-    let musicInterval = null;
-    let currentMusicType = null;
-    let isMuted = false;
+    let musicInterval = null, currentMusicType = null, isMuted = false;
 
     function playSound(freq, type, duration, vol = 0.1) {
         if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -304,10 +373,8 @@
         osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
         gain.gain.setValueAtTime(vol, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-        osc.connect(gain);
-        gain.connect(masterGain);
-        osc.start();
-        osc.stop(audioCtx.currentTime + duration);
+        osc.connect(gain); gain.connect(masterGain);
+        osc.start(); osc.stop(audioCtx.currentTime + duration);
     }
 
     function toggleMute() {
@@ -315,14 +382,12 @@
         masterGain.gain.setValueAtTime(isMuted ? 0 : 1, audioCtx.currentTime);
         document.getElementById('mute-btn').innerText = isMuted ? '🔇' : '🔊';
     }
-
     document.getElementById('mute-btn').onclick = (e) => { e.stopPropagation(); toggleMute(); };
 
     function updateMusic(type) {
         if (currentMusicType === type) return;
         currentMusicType = type;
         if (musicInterval) clearInterval(musicInterval);
-
         if (type === 'menu') {
             const menuNotes = [329.63, 0, 392.00, 0, 440.00, 0, 392.00, 0]; 
             let step = 0;
@@ -337,10 +402,7 @@
             musicInterval = setInterval(() => {
                 if (!gameActive) return;
                 const freq = gameNotes[step % gameNotes.length];
-                if (freq > 0) {
-                    playSound(freq, 'square', 0.2, 0.03);
-                    if (step % 2 === 0) playSound(freq / 2, 'sine', 0.2, 0.05);
-                }
+                if (freq > 0) { playSound(freq, 'square', 0.2, 0.03); if (step % 2 === 0) playSound(freq / 2, 'sine', 0.2, 0.05); }
                 if (step % 4 === 0) playSound(50, 'sawtooth', 0.05, 0.04);
                 step++;
             }, 150);
@@ -356,38 +418,35 @@
     const timerEl = document.getElementById('timer');
     const overlay = document.getElementById('overlay');
 
-    let score = 0;
-    let timeLeft = 30;
-    let gameActive = false;
-    let gameInterval;
-    let spawnInterval;
+    let score = 0, timeLeft = 30, gameActive = false, gameInterval, spawnInterval;
     let sessionCaptures = { '🦋': 0, '🐇': 0, '🐦': 0, '🦊': 0, '🦌': 0, '⏳': 0 };
 
     highScoreUI.innerText = highScore;
 
+    function applyBackground(id) {
+        const bg = BACKGROUNDS[id] || BACKGROUNDS['default'];
+        container.style.background = bg.main;
+        document.getElementById('main-grass').style.filter = bg.grass;
+        currentBackground = id;
+        localStorage.setItem(appId + '-bg-id', id);
+    }
+
     function createEnvironment() {
-        cloudsContainer.innerHTML = '';
-        flowersContainer.innerHTML = '';
+        cloudsContainer.innerHTML = ''; flowersContainer.innerHTML = '';
         for(let i=0; i<5; i++) {
-            const cloud = document.createElement('div');
-            cloud.className = 'cloud';
-            cloud.style.width = (Math.random() * 150 + 100) + 'px';
-            cloud.style.height = (Math.random() * 40 + 30) + 'px';
-            cloud.style.top = (Math.random() * 40) + '%';
-            cloud.style.animationDuration = (Math.random() * 20 + 20) + 's';
-            cloud.style.animationDelay = (Math.random() * -20) + 's';
-            cloudsContainer.appendChild(cloud);
+            const cloud = document.createElement('div'); cloud.className = 'cloud';
+            cloud.style.width = (Math.random() * 150 + 100) + 'px'; cloud.style.height = (Math.random() * 40 + 30) + 'px';
+            cloud.style.top = (Math.random() * 40) + '%'; cloud.style.animationDuration = (Math.random() * 20 + 20) + 's';
+            cloud.style.animationDelay = (Math.random() * -20) + 's'; cloudsContainer.appendChild(cloud);
         }
         for(let i=0; i<40; i++) {
-            const flower = document.createElement('div');
-            flower.className = 'flower';
-            flower.style.left = Math.random() * 100 + '%';
-            flower.style.top = Math.random() * 100 + '%';
-            flower.style.backgroundColor = ['#fff', '#ffeb3b', '#f48fb1', '#ce93d8'][Math.floor(Math.random()*4)];
-            flowersContainer.appendChild(flower);
+            const flower = document.createElement('div'); flower.className = 'flower';
+            flower.style.left = Math.random() * 100 + '%'; flower.style.top = Math.random() * 100 + '%';
+            flower.style.backgroundColor = ['#fff', '#ffeb3b', '#f48fb1', '#ce93d8'][Math.floor(Math.random()*4)]; flowersContainer.appendChild(flower);
         }
     }
     createEnvironment();
+    applyBackground(currentBackground);
 
     const ANIMAL_TYPES = [
         { emoji: '🦋', points: 10, speed: 2.2, clicks: 1, chance: 0.35, type: 'animal' },
@@ -398,104 +457,126 @@
         { emoji: '⏳', points: 0, speed: 3.5, clicks: 1, chance: 0.08, type: 'item' } 
     ];
 
+    function getAnimalLevel(emoji) {
+        const total = stats[emoji] || 0;
+        const config = ACHIEVEMENT_CONFIG[emoji];
+        let level = 0;
+        for(let i=0; i < config.steps.length; i++) {
+            if(total >= config.steps[i]) level = i + 1;
+        }
+        return level;
+    }
+
     function showMainMenu() {
         gameActive = false;
         updateMusic('menu');
         overlay.style.display = 'flex';
         
-        let achievementsHTML = Object.entries(ACHIEVEMENT_CONFIG).map(([id, config]) => {
-            const total = stats[id] || 0;
-            let level = 0;
-            for(let i=0; i < config.steps.length; i++) {
-                if(total >= config.steps[i]) level = i + 1;
-            }
-            
-            const nextGoal = level < config.steps.length ? config.steps[level] : config.steps[config.steps.length - 1];
-            const prevGoal = level > 0 ? config.steps[level - 1] : 0;
-            
-            // Progreso relativo al nivel actual
-            const relativeTotal = total - prevGoal;
-            const relativeGoal = nextGoal - prevGoal;
-            const progress = level < config.steps.length ? Math.min(100, (relativeTotal / relativeGoal) * 100) : 100;
-            
-            const mastery = MASTERIES[level];
+        let contentHTML = '';
 
-            return `
-                <div class="achievement-card mastery-${level}">
-                    <div class="flex justify-between items-start mb-1">
-                        <div class="text-2xl">${id}</div>
-                        <div class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-white/10" style="color: ${mastery.color}">
-                            ${mastery.name.toUpperCase()}
+        if (currentTab === 'achievements') {
+            contentHTML = `<div class="grid-container">` + Object.entries(ACHIEVEMENT_CONFIG).map(([id, config]) => {
+                const total = stats[id] || 0;
+                const level = getAnimalLevel(id);
+                const nextGoal = level < config.steps.length ? config.steps[level] : config.steps[config.steps.length - 1];
+                const prevGoal = level > 0 ? config.steps[level - 1] : 0;
+                const progress = level < config.steps.length ? Math.min(100, ((total - prevGoal) / (nextGoal - prevGoal)) * 100) : 100;
+                const mastery = MASTERIES[level];
+
+                return `
+                    <div class="achievement-card mastery-${level}">
+                        <div class="flex justify-between items-start mb-1">
+                            <div class="text-2xl">${id}</div>
+                            <div class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-white/10" style="color: ${mastery.color}">
+                                ${mastery.name.toUpperCase()}
+                            </div>
+                        </div>
+                        <div class="text-[10px] font-bold uppercase text-white/80">${config.name}</div>
+                        <div class="text-[8px] mb-2 opacity-60">Lvl ${level} • Total: ${total}</div>
+                        <div class="w-full bg-black/30 h-1.5 rounded-full overflow-hidden">
+                            <div class="h-full transition-all" style="width: ${progress}%; background-color: ${mastery.color}"></div>
                         </div>
                     </div>
-                    <div class="text-[10px] font-bold uppercase text-white/80">${config.name}</div>
-                    <div class="text-[8px] mb-2 opacity-60">Lvl ${level} • Total: ${total}</div>
-                    <div class="w-full bg-black/30 h-1.5 rounded-full overflow-hidden">
-                        <div class="h-full transition-all" style="width: ${progress}%; background-color: ${mastery.color}"></div>
-                    </div>
-                    <div class="text-[8px] mt-1 text-right font-mono">
-                        ${level < config.steps.length ? `${total}/${nextGoal}` : 'MÁXIMO'}
-                    </div>
+                `;
+            }).join('') + `</div>`;
+        } else {
+            // PESTAÑA DE FONDOS
+            contentHTML = `<div class="grid-container">`;
+            // Default
+            contentHTML += `
+                <div class="bg-card ${currentBackground === 'default' ? 'selected' : ''}" onclick="applyBackground('default'); showMainMenu();">
+                    <div class="bg-preview" style="background: ${BACKGROUNDS['default'].main}"></div>
+                    <div class="text-xs font-bold">Original</div>
+                    <div class="text-[8px] opacity-60">Inicial</div>
                 </div>
             `;
-        }).join('');
+            // Fondos por maestría
+            Object.keys(ACHIEVEMENT_CONFIG).forEach(emoji => {
+                const userLevel = getAnimalLevel(emoji);
+                for(let i=1; i<=4; i++) {
+                    const bgId = `${emoji}-${i}`;
+                    if (!BACKGROUNDS[bgId]) continue;
+                    const isLocked = userLevel < i;
+                    contentHTML += `
+                        <div class="bg-card ${currentBackground === bgId ? 'selected' : ''} ${isLocked ? 'locked' : ''}" 
+                             onclick="${isLocked ? '' : `applyBackground('${bgId}'); showMainMenu();`}">
+                            <div class="bg-preview" style="background: ${BACKGROUNDS[bgId].main}">
+                                ${isLocked ? '<div class="w-full h-full flex items-center justify-center bg-black/40">🔒</div>' : ''}
+                            </div>
+                            <div class="text-[10px] font-bold">${emoji} ${BACKGROUNDS[bgId].name}</div>
+                            <div class="text-[8px] opacity-60">${isLocked ? 'Bloqueado' : 'Desbloqueado'}</div>
+                        </div>
+                    `;
+                }
+            });
+            contentHTML += `</div>`;
+        }
 
         overlay.innerHTML = `
             <h1 class="game-title">AnimalClick</h1>
-            <p class="text-xl mb-2">¡Captura animales y mejora tus maestrías!</p>
-            <div class="text-yellow-400 font-bold text-2xl mb-6">🏆 Récord: <span>${highScore}</span></div>
+            <div class="text-yellow-400 font-bold text-2xl mb-4">🏆 Récord: ${highScore}</div>
             
-            <button id="start-btn" class="btn mb-10">¡JUGAR AHORA!</button>
-
-            <div class="w-full max-w-xl">
-                <h3 class="font-bold text-lg border-b border-white/20 pb-2 mb-4">🎖️ MAESTRÍAS FORESTALES</h3>
-                <div class="achievement-grid">
-                    ${achievementsHTML}
-                </div>
+            <div class="tab-nav">
+                <div class="tab-btn ${currentTab === 'achievements' ? 'active' : ''}" onclick="switchTab('achievements')">LOGROS</div>
+                <div class="tab-btn ${currentTab === 'backgrounds' ? 'active' : ''}" onclick="switchTab('backgrounds')">FONDOS</div>
             </div>
+
+            <button id="start-btn" class="btn mb-4">¡JUGAR AHORA!</button>
+            
+            ${contentHTML}
         `;
         
-        document.getElementById('start-btn').onclick = () => {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            startGame();
-        };
+        document.getElementById('start-btn').onclick = () => startGame();
     }
+
+    window.switchTab = (tab) => {
+        currentTab = tab;
+        showMainMenu();
+    };
 
     function createEntity(forceItem = false) {
         if (!gameActive) return;
         let type;
-        if (forceItem) {
-            type = ANIMAL_TYPES.find(t => t.type === 'item');
-        } else {
-            let rand = Math.random();
-            let cumulative = 0;
-            type = ANIMAL_TYPES[0];
-            for (const t of ANIMAL_TYPES) {
-                cumulative += t.chance;
-                if (rand < cumulative) { type = t; break; }
-            }
+        if (forceItem) { type = ANIMAL_TYPES.find(t => t.type === 'item'); } 
+        else {
+            let rand = Math.random(), cumulative = 0; type = ANIMAL_TYPES[0];
+            for (const t of ANIMAL_TYPES) { cumulative += t.chance; if (rand < cumulative) { type = t; break; } }
         }
 
         const entity = document.createElement('div');
         entity.className = 'animal';
         let health = type.clicks;
-        entity.innerHTML = `
-            <div class="animal-emoji">${type.emoji}</div>
-            <div class="health-bar" style="display: ${type.clicks > 1 ? 'block' : 'none'}">
-                <div class="health-fill"></div>
-            </div>
-        `;
+        entity.innerHTML = `<div class="animal-emoji">${type.emoji}</div><div class="health-bar" style="display: ${type.clicks > 1 ? 'block' : 'none'}"><div class="health-fill"></div></div>`;
 
         const side = Math.floor(Math.random() * 4);
         let startX, startY, endX, endY;
         const pad = 120;
-        if (side === 0) { startX = -pad; startY = Math.random() * window.innerHeight; endX = window.innerWidth + pad; endY = Math.random() * window.innerHeight; }
-        else if (side === 1) { startX = window.innerWidth + pad; startY = Math.random() * window.innerHeight; endX = -pad; endY = Math.random() * window.innerHeight; }
-        else if (side === 2) { startX = Math.random() * window.innerWidth; startY = -pad; endX = Math.random() * window.innerWidth; endY = window.innerHeight + pad; }
-        else { startX = Math.random() * window.innerWidth; startY = window.innerHeight + pad; endX = Math.random() * window.innerWidth; endY = -pad; }
+        if (side === 0) { startX = -pad; startY = Math.random()*innerHeight; endX = innerWidth+pad; endY = Math.random()*innerHeight; }
+        else if (side === 1) { startX = innerWidth+pad; startY = Math.random()*innerHeight; endX = -pad; endY = Math.random()*innerHeight; }
+        else if (side === 2) { startX = Math.random()*innerWidth; startY = -pad; endX = Math.random()*innerWidth; endY = innerHeight+pad; }
+        else { startX = Math.random()*innerWidth; startY = innerHeight+pad; endX = Math.random()*innerWidth; endY = -pad; }
 
-        entity.style.left = `${startX}px`;
-        entity.style.top = `${startY}px`;
+        entity.style.left = `${startX}px`; entity.style.top = `${startY}px`;
         container.appendChild(entity);
 
         if (type.type === 'item') {
@@ -512,112 +593,66 @@
                 const progress = Math.min(elapsed / duration, 1);
                 const curX = startX + (endX - startX) * progress;
                 const curY = startY + (endY - startY) * progress;
-                const angle = Math.atan2(endY - startY, endX - startX);
                 const offset = Math.sin(elapsed * frequency) * amplitude * (1 - progress);
-                const finalX = curX + Math.cos(angle + Math.PI/2) * offset;
-                const finalY = curY + Math.sin(angle + Math.PI/2) * offset;
-                entity.style.left = `${finalX}px`;
-                entity.style.top = `${finalY}px`;
-                if (progress < 1) requestAnimationFrame(updateClockPos);
-                else entity.remove();
+                const angle = Math.atan2(endY - startY, endX - startX);
+                entity.style.left = `${curX + Math.cos(angle + Math.PI/2) * offset}px`;
+                entity.style.top = `${curY + Math.sin(angle + Math.PI/2) * offset}px`;
+                if (progress < 1) requestAnimationFrame(updateClockPos); else entity.remove();
             }
             requestAnimationFrame(updateClockPos);
         } else {
             const duration = (10000 / type.speed) + (Math.random() * 1000);
-            const animation = entity.animate([
-                { left: `${startX}px`, top: `${startY}px` },
-                { left: `${endX}px`, top: `${endY}px` }
-            ], { duration, easing: 'linear' });
+            const animation = entity.animate([{ left: `${startX}px`, top: `${startY}px` }, { left: `${endX}px`, top: `${endY}px` }], { duration, easing: 'linear' });
             animation.onfinish = () => entity.remove();
         }
 
         const handler = (e) => {
-            e.preventDefault();
-            if (!gameActive) return;
+            e.preventDefault(); if (!gameActive) return;
             health--;
             if (health > 0) {
                 playSound(100, 'sawtooth', 0.1, 0.08);
                 const fill = entity.querySelector('.health-fill');
                 if (fill) fill.style.width = `${(health / type.clicks) * 100}%`;
-                entity.classList.remove('shake');
-                void entity.offsetWidth;
-                entity.classList.add('shake');
-                return;
+                entity.classList.remove('shake'); void entity.offsetWidth; entity.classList.add('shake'); return;
             }
-            
             sessionCaptures[type.emoji]++;
             if (type.type === 'item') {
-                timeLeft += 5;
-                timerEl.innerText = timeLeft;
-                timerEl.classList.add('time-pulse');
-                setTimeout(() => timerEl.classList.remove('time-pulse'), 500);
-                playSound(1318, 'triangle', 0.5, 0.1);
+                timeLeft += 5; timerEl.innerText = timeLeft; timerEl.classList.add('time-pulse');
+                setTimeout(() => timerEl.classList.remove('time-pulse'), 500); playSound(1318, 'triangle', 0.5, 0.1);
             } else {
-                score += type.points;
-                scoreEl.innerText = score;
-                playSound(600 + (Math.random() * 200), 'sine', 0.2, 0.1);
+                score += type.points; scoreEl.innerText = score; playSound(600 + (Math.random() * 200), 'sine', 0.2, 0.1);
             }
-            
             const float = document.createElement('div');
             float.className = type.type === 'item' ? 'time-float' : 'score-float';
             float.innerText = type.type === 'item' ? '+5s' : `+${type.points}`;
-            float.style.left = `${entity.offsetLeft}px`;
-            float.style.top = `${entity.offsetTop}px`;
-            container.appendChild(float);
-            setTimeout(() => float.remove(), 800);
-            entity.remove();
+            float.style.left = `${entity.offsetLeft}px`; float.style.top = `${entity.offsetTop}px`;
+            container.appendChild(float); setTimeout(() => float.remove(), 800); entity.remove();
         };
-        entity.addEventListener('mousedown', handler);
-        entity.addEventListener('touchstart', handler, {passive: false});
+        entity.addEventListener('mousedown', handler); entity.addEventListener('touchstart', handler, {passive: false});
     }
 
     function startGame() {
-        score = 0;
-        timeLeft = 30;
-        sessionCaptures = { '🦋': 0, '🐇': 0, '🐦': 0, '🦊': 0, '🦌': 0, '⏳': 0 };
-        gameActive = true;
-        scoreEl.innerText = score;
-        timerEl.innerText = timeLeft;
-        overlay.style.display = 'none';
-        updateMusic('game');
-
+        score = 0; timeLeft = 30; sessionCaptures = { '🦋': 0, '🐇': 0, '🐦': 0, '🦊': 0, '🦌': 0, '⏳': 0 };
+        gameActive = true; scoreEl.innerText = score; timerEl.innerText = timeLeft;
+        overlay.style.display = 'none'; updateMusic('game');
         document.querySelectorAll('.animal').forEach(a => a.remove());
-
         spawnInterval = setInterval(() => {
-            createEntity();
-            if (score > 500 && Math.random() > 0.6) createEntity();
+            createEntity(); if (score > 500 && Math.random() > 0.6) createEntity();
             if (timeLeft < 15 && Math.random() > 0.75) createEntity(true);
         }, 750);
-
-        gameInterval = setInterval(() => {
-            timeLeft--;
-            timerEl.innerText = timeLeft;
-            if (timeLeft <= 0) endGame();
-        }, 1000);
+        gameInterval = setInterval(() => { timeLeft--; timerEl.innerText = timeLeft; if (timeLeft <= 0) endGame(); }, 1000);
     }
 
     function endGame() {
-        gameActive = false;
-        clearInterval(gameInterval);
-        clearInterval(spawnInterval);
-        
-        Object.keys(sessionCaptures).forEach(key => {
-            stats[key] = (stats[key] || 0) + sessionCaptures[key];
-        });
+        gameActive = false; clearInterval(gameInterval); clearInterval(spawnInterval);
+        Object.keys(sessionCaptures).forEach(key => stats[key] = (stats[key] || 0) + sessionCaptures[key]);
         localStorage.setItem(appId + '-stats', JSON.stringify(stats));
-
-        if (score > highScore) {
-            highScore = score;
-            localStorage.setItem(appId + '-highscore', highScore);
-            highScoreUI.innerText = highScore;
-        }
+        if (score > highScore) { highScore = score; localStorage.setItem(appId + '-highscore', highScore); }
 
         overlay.innerHTML = `
             <h1 class="game-title">¡TIEMPO AGOTADO!</h1>
             <div class="text-4xl mb-4 font-bold text-yellow-300">${score} PUNTOS</div>
-            
             <div class="bg-black/30 p-4 rounded-3xl mb-8 w-full max-w-sm border border-white/10">
-                <h4 class="text-sm font-bold opacity-70 mb-3 uppercase tracking-widest">Resumen de captura</h4>
                 <div class="grid grid-cols-3 gap-2">
                     ${Object.entries(sessionCaptures).map(([emoji, count]) => `
                         <div class="bg-white/5 rounded-xl p-2">
@@ -627,14 +662,12 @@
                     `).join('')}
                 </div>
             </div>
-            
             <div class="flex flex-col gap-4 w-full max-w-xs">
                 <button id="restart-btn" class="btn w-full">REINTENTAR</button>
-                <button id="main-menu-btn" class="btn btn-secondary w-full">MENU Y LOGROS</button>
+                <button id="main-menu-btn" class="btn btn-secondary w-full">VOLVER AL MENU</button>
             </div>
         `;
         overlay.style.display = 'flex';
-        
         document.getElementById('restart-btn').onclick = () => startGame();
         document.getElementById('main-menu-btn').onclick = () => showMainMenu();
     }

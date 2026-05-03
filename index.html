@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -44,8 +45,13 @@
         }
 
         @keyframes moveClouds {
-            from { left: -200px; }
-            to { left: 100vw; }
+            from {
+                left: -200px;
+            }
+
+            to {
+                left: 100vw;
+            }
         }
 
         .flower {
@@ -70,14 +76,14 @@
 
         .animal-emoji {
             font-size: 4rem;
-            filter: drop-shadow(4px 4px 6px rgba(0,0,0,0.3));
+            filter: drop-shadow(4px 4px 6px rgba(0, 0, 0, 0.3));
             user-select: none;
         }
 
         .health-bar {
             width: 50px;
             height: 8px;
-            background: rgba(0,0,0,0.3);
+            background: rgba(0, 0, 0, 0.3);
             border-radius: 4px;
             border: 1px solid white;
             margin-top: 5px;
@@ -91,7 +97,8 @@
             transition: width 0.2s ease;
         }
 
-        .score-float, .time-float {
+        .score-float,
+        .time-float {
             position: absolute;
             font-weight: 900;
             text-shadow: 2px 2px 0 #000;
@@ -100,12 +107,26 @@
             z-index: 60;
         }
 
-        .score-float { color: #ffd700; font-size: 1.5rem; }
-        .time-float { color: #00f2fe; font-size: 1.8rem; }
+        .score-float {
+            color: #ffd700;
+            font-size: 1.5rem;
+        }
+
+        .time-float {
+            color: #00f2fe;
+            font-size: 1.8rem;
+        }
 
         @keyframes floatUp {
-            0% { transform: translateY(0) scale(1); opacity: 1; }
-            100% { transform: translateY(-100px) scale(1.5); opacity: 0; }
+            0% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-100px) scale(1.5);
+                opacity: 0;
+            }
         }
 
         #ui-layer {
@@ -119,7 +140,7 @@
             display: flex;
             justify-content: space-between;
             color: white;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
         }
 
         .btn {
@@ -154,7 +175,7 @@
         #overlay {
             position: absolute;
             inset: 0;
-            background: rgba(0,0,0,0.6);
+            background: rgba(0, 0, 0, 0.6);
             backdrop-filter: blur(8px);
             display: flex;
             flex-direction: column;
@@ -171,104 +192,134 @@
             background: linear-gradient(to bottom, #ffeb3b, #f44336);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            filter: drop-shadow(4px 4px 0px rgba(0,0,0,0.2));
+            filter: drop-shadow(4px 4px 0px rgba(0, 0, 0, 0.2));
             margin-bottom: 10px;
         }
 
-        .shake { animation: shake 0.2s ease-in-out; }
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
+        .shake {
+            animation: shake 0.2s ease-in-out;
         }
 
-        .time-pulse { animation: timePulse 0.5s ease-out; }
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-5px);
+            }
+
+            75% {
+                transform: translateX(5px);
+            }
+        }
+
+        .time-pulse {
+            animation: timePulse 0.5s ease-out;
+        }
+
         @keyframes timePulse {
-            0% { transform: scale(1); color: white; }
-            50% { transform: scale(1.4); color: #00f2fe; }
-            100% { transform: scale(1); color: white; }
+            0% {
+                transform: scale(1);
+                color: white;
+            }
+
+            50% {
+                transform: scale(1.4);
+                color: #00f2fe;
+            }
+
+            100% {
+                transform: scale(1);
+                color: white;
+            }
         }
     </style>
 </head>
+
 <body>
 
-<div id="game-container">
-    <div id="clouds-container"></div>
-    <div class="grass-layer">
-        <div id="flowers-container"></div>
-    </div>
-
-    <div id="ui-layer">
-        <div>
-            <div class="text-3xl font-bold" style="font-family: 'Fredoka One'">PUNTOS: <span id="score">0</span></div>
-            <div class="text-lg opacity-90">Récord: <span id="high-score-ui">0</span></div>
+    <div id="game-container">
+        <div id="clouds-container"></div>
+        <div class="grass-layer">
+            <div id="flowers-container"></div>
         </div>
-        <div class="text-center">
-            <div class="text-4xl font-black bg-white/20 px-4 py-1 rounded-full inline-block min-w-[80px]" id="timer">30</div>
-            <div class="text-xs mt-1 font-bold">TIEMPO</div>
+
+        <div id="ui-layer">
+            <div>
+                <div class="text-3xl font-bold" style="font-family: 'Fredoka One'">PUNTOS: <span id="score">0</span>
+                </div>
+                <div class="text-lg opacity-90">Récord: <span id="high-score-ui">0</span></div>
+            </div>
+            <div class="text-center">
+                <div class="text-4xl font-black bg-white/20 px-4 py-1 rounded-full inline-block min-w-[80px]"
+                    id="timer">30</div>
+                <div class="text-xs mt-1 font-bold">TIEMPO</div>
+            </div>
+        </div>
+
+        <div id="overlay">
+            <!-- El contenido del menú se genera en la función showMainMenu -->
         </div>
     </div>
 
-    <div id="overlay">
-        <!-- El contenido del menú se genera en la función showMainMenu -->
-    </div>
-</div>
+    <script>
+        const container = document.getElementById('game-container');
+        const cloudsContainer = document.getElementById('clouds-container');
+        const flowersContainer = document.getElementById('flowers-container');
+        const scoreEl = document.getElementById('score');
+        const highScoreUI = document.getElementById('high-score-ui');
+        const timerEl = document.getElementById('timer');
+        const overlay = document.getElementById('overlay');
 
-<script>
-    const container = document.getElementById('game-container');
-    const cloudsContainer = document.getElementById('clouds-container');
-    const flowersContainer = document.getElementById('flowers-container');
-    const scoreEl = document.getElementById('score');
-    const highScoreUI = document.getElementById('high-score-ui');
-    const timerEl = document.getElementById('timer');
-    const overlay = document.getElementById('overlay');
+        let score = 0;
+        let highScore = localStorage.getItem('animalclick-highscore') || 0;
+        let timeLeft = 30;
+        let gameActive = false;
+        let gameInterval;
+        let spawnInterval;
+        let clocksCaught = 0;
 
-    let score = 0;
-    let highScore = localStorage.getItem('animalclick-highscore') || 0;
-    let timeLeft = 30;
-    let gameActive = false;
-    let gameInterval;
-    let spawnInterval;
-    let clocksCaught = 0;
+        highScoreUI.innerText = highScore;
 
-    highScoreUI.innerText = highScore;
+        function createEnvironment() {
+            for (let i = 0; i < 5; i++) {
+                const cloud = document.createElement('div');
+                cloud.className = 'cloud';
+                cloud.style.width = (Math.random() * 150 + 100) + 'px';
+                cloud.style.height = (Math.random() * 40 + 30) + 'px';
+                cloud.style.top = (Math.random() * 40) + '%';
+                cloud.style.animationDuration = (Math.random() * 20 + 20) + 's';
+                cloud.style.animationDelay = (Math.random() * -20) + 's';
+                cloudsContainer.appendChild(cloud);
+            }
 
-    function createEnvironment() {
-        for(let i=0; i<5; i++) {
-            const cloud = document.createElement('div');
-            cloud.className = 'cloud';
-            cloud.style.width = (Math.random() * 150 + 100) + 'px';
-            cloud.style.height = (Math.random() * 40 + 30) + 'px';
-            cloud.style.top = (Math.random() * 40) + '%';
-            cloud.style.animationDuration = (Math.random() * 20 + 20) + 's';
-            cloud.style.animationDelay = (Math.random() * -20) + 's';
-            cloudsContainer.appendChild(cloud);
+            for (let i = 0; i < 40; i++) {
+                const flower = document.createElement('div');
+                flower.className = 'flower';
+                flower.style.left = Math.random() * 100 + '%';
+                flower.style.top = Math.random() * 100 + '%';
+                flower.style.backgroundColor = ['#fff', '#ffeb3b', '#f48fb1', '#ce93d8'][Math.floor(Math.random() * 4)];
+                flowersContainer.appendChild(flower);
+            }
         }
+        createEnvironment();
 
-        for(let i=0; i<40; i++) {
-            const flower = document.createElement('div');
-            flower.className = 'flower';
-            flower.style.left = Math.random() * 100 + '%';
-            flower.style.top = Math.random() * 100 + '%';
-            flower.style.backgroundColor = ['#fff', '#ffeb3b', '#f48fb1', '#ce93d8'][Math.floor(Math.random()*4)];
-            flowersContainer.appendChild(flower);
-        }
-    }
-    createEnvironment();
+        const ANIMAL_TYPES = [
+            { emoji: '🦋', points: 10, speed: 2, clicks: 1, chance: 0.35, type: 'animal' },
+            { emoji: '🐇', points: 25, speed: 3.5, clicks: 1, chance: 0.25, type: 'animal' },
+            { emoji: '🐦', points: 50, speed: 5.5, clicks: 1, chance: 0.2, type: 'animal' },
+            { emoji: '🦊', points: 100, speed: 7.5, clicks: 2, chance: 0.1, type: 'animal' },
+            { emoji: '🦌', points: 250, speed: 10, clicks: 3, chance: 0.05, type: 'animal' },
+            { emoji: '⏳', points: 0, speed: 3.2, clicks: 1, chance: 0.08, type: 'item' }
+        ];
 
-    const ANIMAL_TYPES = [
-        { emoji: '🦋', points: 10, speed: 2, clicks: 1, chance: 0.35, type: 'animal' },
-        { emoji: '🐇', points: 25, speed: 3.5, clicks: 1, chance: 0.25, type: 'animal' },
-        { emoji: '🐦', points: 50, speed: 5.5, clicks: 1, chance: 0.2, type: 'animal' },
-        { emoji: '🦊', points: 100, speed: 7.5, clicks: 2, chance: 0.1, type: 'animal' },
-        { emoji: '🦌', points: 250, speed: 10, clicks: 3, chance: 0.05, type: 'animal' },
-        { emoji: '⏳', points: 0, speed: 3.2, clicks: 1, chance: 0.08, type: 'item' } 
-    ];
-
-    function showMainMenu() {
-        gameActive = false;
-        overlay.style.display = 'flex';
-        overlay.innerHTML = `
+        function showMainMenu() {
+            gameActive = false;
+            overlay.style.display = 'flex';
+            overlay.innerHTML = `
             <h1 class="game-title">AnimalClick</h1>
             <p class="text-xl mb-2">¡Captura animales y consigue tiempo extra!</p>
             <div class="text-yellow-400 font-bold text-2xl mb-6">🏆 Récord: <span>${highScore}</span></div>
@@ -284,172 +335,172 @@
             
             <button id="start-btn" class="btn">¡JUGAR AHORA!</button>
         `;
-        document.getElementById('start-btn').onclick = startGame;
-    }
-
-    function createEntity(forceItem = false) {
-        if (!gameActive) return;
-
-        let type;
-        if (forceItem) {
-            type = ANIMAL_TYPES.find(t => t.type === 'item');
-        } else {
-            let rand = Math.random();
-            let cumulative = 0;
-            type = ANIMAL_TYPES[0];
-            for (const t of ANIMAL_TYPES) {
-                cumulative += t.chance;
-                if (rand < cumulative) {
-                    type = t;
-                    break;
-                }
-            }
+            document.getElementById('start-btn').onclick = startGame;
         }
 
-        const entity = document.createElement('div');
-        entity.className = 'animal';
-        let health = type.clicks;
-        
-        entity.innerHTML = `
+        function createEntity(forceItem = false) {
+            if (!gameActive) return;
+
+            let type;
+            if (forceItem) {
+                type = ANIMAL_TYPES.find(t => t.type === 'item');
+            } else {
+                let rand = Math.random();
+                let cumulative = 0;
+                type = ANIMAL_TYPES[0];
+                for (const t of ANIMAL_TYPES) {
+                    cumulative += t.chance;
+                    if (rand < cumulative) {
+                        type = t;
+                        break;
+                    }
+                }
+            }
+
+            const entity = document.createElement('div');
+            entity.className = 'animal';
+            let health = type.clicks;
+
+            entity.innerHTML = `
             <div class="animal-emoji">${type.emoji}</div>
             <div class="health-bar" style="display: ${type.clicks > 1 ? 'block' : 'none'}">
                 <div class="health-fill"></div>
             </div>
         `;
 
-        const side = Math.floor(Math.random() * 4);
-        let startX, startY, endX, endY;
-        const pad = 120;
+            const side = Math.floor(Math.random() * 4);
+            let startX, startY, endX, endY;
+            const pad = 120;
 
-        if (side === 0) { startX = -pad; startY = Math.random() * window.innerHeight; endX = window.innerWidth + pad; endY = Math.random() * window.innerHeight; }
-        else if (side === 1) { startX = window.innerWidth + pad; startY = Math.random() * window.innerHeight; endX = -pad; endY = Math.random() * window.innerHeight; }
-        else if (side === 2) { startX = Math.random() * window.innerWidth; startY = -pad; endX = Math.random() * window.innerWidth; endY = window.innerHeight + pad; }
-        else { startX = Math.random() * window.innerWidth; startY = window.innerHeight + pad; endX = Math.random() * window.innerWidth; endY = -pad; }
+            if (side === 0) { startX = -pad; startY = Math.random() * window.innerHeight; endX = window.innerWidth + pad; endY = Math.random() * window.innerHeight; }
+            else if (side === 1) { startX = window.innerWidth + pad; startY = Math.random() * window.innerHeight; endX = -pad; endY = Math.random() * window.innerHeight; }
+            else if (side === 2) { startX = Math.random() * window.innerWidth; startY = -pad; endX = Math.random() * window.innerWidth; endY = window.innerHeight + pad; }
+            else { startX = Math.random() * window.innerWidth; startY = window.innerHeight + pad; endX = Math.random() * window.innerWidth; endY = -pad; }
 
-        entity.style.left = `${startX}px`;
-        entity.style.top = `${startY}px`;
-        container.appendChild(entity);
+            entity.style.left = `${startX}px`;
+            entity.style.top = `${startY}px`;
+            container.appendChild(entity);
 
-        let effectiveSpeed = type.speed;
-        if (type.type === 'item') {
-            effectiveSpeed = type.speed + (clocksCaught * 0.4); 
-        }
-
-        const baseDuration = type.type === 'item' ? 10000 : 11000;
-        const duration = (baseDuration / effectiveSpeed) + (Math.random() * 1000);
-        
-        if (type.type === 'item') {
-            const startTime = performance.now();
-            const amplitude = 50 + (clocksCaught * 25); 
-            const frequency = 0.005 + (clocksCaught * 0.001);
-
-            function updateClockPos(currentTime) {
-                if (!gameActive || !entity.parentElement) return;
-                const elapsed = currentTime - startTime;
-                const progress = Math.min(elapsed / duration, 1);
-                const curX = startX + (endX - startX) * progress;
-                const curY = startY + (endY - startY) * progress;
-                const angle = Math.atan2(endY - startY, endX - startX);
-                const offset = Math.sin(elapsed * frequency) * amplitude * (1 - progress);
-                const finalX = curX + Math.cos(angle + Math.PI/2) * offset;
-                const finalY = curY + Math.sin(angle + Math.PI/2) * offset;
-                entity.style.left = `${finalX}px`;
-                entity.style.top = `${finalY}px`;
-                if (progress < 1) requestAnimationFrame(updateClockPos);
-                else entity.remove();
-            }
-            requestAnimationFrame(updateClockPos);
-        } else {
-            const animation = entity.animate([
-                { left: `${startX}px`, top: `${startY}px` },
-                { left: `${endX}px`, top: `${endY}px` }
-            ], { duration, easing: 'linear' });
-            animation.onfinish = () => entity.remove();
-        }
-
-        const handler = (e) => {
-            e.preventDefault();
-            if (!gameActive) return;
-            health--;
-            if (health > 0) {
-                const fill = entity.querySelector('.health-fill');
-                if (fill) fill.style.width = `${(health / type.clicks) * 100}%`;
-                entity.classList.remove('shake');
-                void entity.offsetWidth;
-                entity.classList.add('shake');
-                return;
-            }
+            let effectiveSpeed = type.speed;
             if (type.type === 'item') {
-                clocksCaught++; 
-                timeLeft += 5;
-                timerEl.innerText = timeLeft;
-                timerEl.classList.remove('time-pulse');
-                void timerEl.offsetWidth;
-                timerEl.classList.add('time-pulse');
-                const float = document.createElement('div');
-                float.className = 'time-float';
-                float.innerText = `+5s`;
-                float.style.left = `${entity.offsetLeft}px`;
-                float.style.top = `${entity.offsetTop}px`;
-                container.appendChild(float);
-                setTimeout(() => float.remove(), 1000);
-            } else {
-                score += type.points;
-                scoreEl.innerText = score;
-                const float = document.createElement('div');
-                float.className = 'score-float';
-                float.innerText = `+${type.points}`;
-                float.style.left = `${entity.offsetLeft}px`;
-                float.style.top = `${entity.offsetTop}px`;
-                container.appendChild(float);
-                setTimeout(() => float.remove(), 800);
+                effectiveSpeed = type.speed + (clocksCaught * 0.4);
             }
-            entity.remove();
-        };
-        entity.addEventListener('mousedown', handler);
-        entity.addEventListener('touchstart', handler, {passive: false});
-    }
 
-    function startGame() {
-        score = 0;
-        timeLeft = 30;
-        clocksCaught = 0; 
-        gameActive = true;
-        scoreEl.innerText = score;
-        timerEl.innerText = timeLeft;
-        overlay.style.display = 'none';
-        timerEl.classList.remove('text-red-500');
+            const baseDuration = type.type === 'item' ? 10000 : 11000;
+            const duration = (baseDuration / effectiveSpeed) + (Math.random() * 1000);
 
-        document.querySelectorAll('.animal').forEach(a => a.remove());
+            if (type.type === 'item') {
+                const startTime = performance.now();
+                const amplitude = 50 + (clocksCaught * 25);
+                const frequency = 0.005 + (clocksCaught * 0.001);
 
-        spawnInterval = setInterval(() => {
-            createEntity();
-            if (score > 400 && Math.random() > 0.6) createEntity();
-            if (score > 1000 && Math.random() > 0.5) createEntity();
-            if (timeLeft < 10 && Math.random() > 0.6) createEntity(true);
-        }, 700);
+                function updateClockPos(currentTime) {
+                    if (!gameActive || !entity.parentElement) return;
+                    const elapsed = currentTime - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    const curX = startX + (endX - startX) * progress;
+                    const curY = startY + (endY - startY) * progress;
+                    const angle = Math.atan2(endY - startY, endX - startX);
+                    const offset = Math.sin(elapsed * frequency) * amplitude * (1 - progress);
+                    const finalX = curX + Math.cos(angle + Math.PI / 2) * offset;
+                    const finalY = curY + Math.sin(angle + Math.PI / 2) * offset;
+                    entity.style.left = `${finalX}px`;
+                    entity.style.top = `${finalY}px`;
+                    if (progress < 1) requestAnimationFrame(updateClockPos);
+                    else entity.remove();
+                }
+                requestAnimationFrame(updateClockPos);
+            } else {
+                const animation = entity.animate([
+                    { left: `${startX}px`, top: `${startY}px` },
+                    { left: `${endX}px`, top: `${endY}px` }
+                ], { duration, easing: 'linear' });
+                animation.onfinish = () => entity.remove();
+            }
 
-        gameInterval = setInterval(() => {
-            timeLeft--;
-            timerEl.innerText = timeLeft;
-            if (timeLeft <= 10) timerEl.classList.add('text-red-500');
-            else timerEl.classList.remove('text-red-500');
-            if (timeLeft <= 0) endGame();
-        }, 1000);
-    }
-
-    function endGame() {
-        gameActive = false;
-        clearInterval(gameInterval);
-        clearInterval(spawnInterval);
-
-        if (score > highScore) {
-            highScore = score;
-            localStorage.setItem('animalclick-highscore', highScore);
-            highScoreUI.innerText = highScore;
+            const handler = (e) => {
+                e.preventDefault();
+                if (!gameActive) return;
+                health--;
+                if (health > 0) {
+                    const fill = entity.querySelector('.health-fill');
+                    if (fill) fill.style.width = `${(health / type.clicks) * 100}%`;
+                    entity.classList.remove('shake');
+                    void entity.offsetWidth;
+                    entity.classList.add('shake');
+                    return;
+                }
+                if (type.type === 'item') {
+                    clocksCaught++;
+                    timeLeft += 5;
+                    timerEl.innerText = timeLeft;
+                    timerEl.classList.remove('time-pulse');
+                    void timerEl.offsetWidth;
+                    timerEl.classList.add('time-pulse');
+                    const float = document.createElement('div');
+                    float.className = 'time-float';
+                    float.innerText = `+5s`;
+                    float.style.left = `${entity.offsetLeft}px`;
+                    float.style.top = `${entity.offsetTop}px`;
+                    container.appendChild(float);
+                    setTimeout(() => float.remove(), 1000);
+                } else {
+                    score += type.points;
+                    scoreEl.innerText = score;
+                    const float = document.createElement('div');
+                    float.className = 'score-float';
+                    float.innerText = `+${type.points}`;
+                    float.style.left = `${entity.offsetLeft}px`;
+                    float.style.top = `${entity.offsetTop}px`;
+                    container.appendChild(float);
+                    setTimeout(() => float.remove(), 800);
+                }
+                entity.remove();
+            };
+            entity.addEventListener('mousedown', handler);
+            entity.addEventListener('touchstart', handler, { passive: false });
         }
 
-        overlay.innerHTML = `
+        function startGame() {
+            score = 0;
+            timeLeft = 30;
+            clocksCaught = 0;
+            gameActive = true;
+            scoreEl.innerText = score;
+            timerEl.innerText = timeLeft;
+            overlay.style.display = 'none';
+            timerEl.classList.remove('text-red-500');
+
+            document.querySelectorAll('.animal').forEach(a => a.remove());
+
+            spawnInterval = setInterval(() => {
+                createEntity();
+                if (score > 400 && Math.random() > 0.6) createEntity();
+                if (score > 1000 && Math.random() > 0.5) createEntity();
+                if (timeLeft < 10 && Math.random() > 0.6) createEntity(true);
+            }, 700);
+
+            gameInterval = setInterval(() => {
+                timeLeft--;
+                timerEl.innerText = timeLeft;
+                if (timeLeft <= 10) timerEl.classList.add('text-red-500');
+                else timerEl.classList.remove('text-red-500');
+                if (timeLeft <= 0) endGame();
+            }, 1000);
+        }
+
+        function endGame() {
+            gameActive = false;
+            clearInterval(gameInterval);
+            clearInterval(spawnInterval);
+
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('animalclick-highscore', highScore);
+                highScoreUI.innerText = highScore;
+            }
+
+            overlay.innerHTML = `
             <h1 class="game-title">¡FIN!</h1>
             <div class="text-4xl mb-2 font-bold">${score} PUNTOS</div>
             <div class="text-xl mb-2 text-cyan-300">Relojes Atrapados: ${clocksCaught}</div>
@@ -460,15 +511,16 @@
                 <button id="main-menu-btn" class="btn btn-secondary w-full">PANTALLA PRINCIPAL</button>
             </div>
         `;
-        overlay.style.display = 'flex';
-        
-        document.getElementById('restart-btn').onclick = startGame;
-        document.getElementById('main-menu-btn').onclick = showMainMenu;
-    }
+            overlay.style.display = 'flex';
 
-    // Inicializar el juego con la pantalla principal
-    showMainMenu();
-</script>
+            document.getElementById('restart-btn').onclick = startGame;
+            document.getElementById('main-menu-btn').onclick = showMainMenu;
+        }
+
+        // Inicializar el juego con la pantalla principal
+        showMainMenu();
+    </script>
 
 </body>
+
 </html>

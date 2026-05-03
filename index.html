@@ -143,6 +143,26 @@
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
         }
 
+        #mute-btn {
+            pointer-events: auto;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            backdrop-filter: blur(4px);
+            transition: transform 0.1s, background 0.2s;
+        }
+
+        #mute-btn:active {
+            transform: scale(0.9);
+        }
+
         .btn {
             pointer-events: auto;
             background: #ff6b6b;
@@ -253,19 +273,107 @@
                 </div>
                 <div class="text-lg opacity-90">Récord: <span id="high-score-ui">0</span></div>
             </div>
-            <div class="text-center">
-                <div class="text-4xl font-black bg-white/20 px-4 py-1 rounded-full inline-block min-w-[80px]"
-                    id="timer">30</div>
-                <div class="text-xs mt-1 font-bold">TIEMPO</div>
+            <div class="flex items-start gap-4">
+                <div class="text-center">
+                    <div class="text-4xl font-black bg-white/20 px-4 py-1 rounded-full inline-block min-w-[80px]"
+                        id="timer">30</div>
+                    <div class="text-xs mt-1 font-bold">TIEMPO</div>
+                </div>
+                <button id="mute-btn" title="Silenciar">🔊</button>
             </div>
         </div>
 
-        <div id="overlay">
-            <!-- El contenido del menú se genera en la función showMainMenu -->
-        </div>
+        <div id="overlay"></div>
     </div>
 
     <script>
+        // --- SISTEMA DE AUDIO AVANZADO (Web Audio API) ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const masterGain = audioCtx.createGain();
+        masterGain.connect(audioCtx.destination);
+
+        let musicInterval = null;
+        let currentMusicType = null;
+        let isMuted = false;
+
+        function playSound(freq, type, duration, vol = 0.1) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(masterGain); // Conectado al Master Gain
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            masterGain.gain.setValueAtTime(isMuted ? 0 : 1, audioCtx.currentTime);
+            document.getElementById('mute-btn').innerText = isMuted ? '🔇' : '🔊';
+        }
+
+        document.getElementById('mute-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleMute();
+        });
+
+        function playBtnSound() {
+            playSound(523.25, 'sine', 0.1, 0.15);
+            setTimeout(() => playSound(659.25, 'sine', 0.1, 0.1), 40);
+        }
+
+        function playCaptureSound(type) {
+            if (type === 'item') {
+                [880, 1108, 1318, 1760].forEach((f, i) => {
+                    setTimeout(() => playSound(f, 'triangle', 0.5, 0.1), i * 60);
+                });
+            } else {
+                const base = 400 + (Math.random() * 400);
+                playSound(base, 'sine', 0.2, 0.15);
+                setTimeout(() => playSound(base * 1.5, 'sine', 0.1, 0.05), 50);
+            }
+        }
+
+        function playHitSound() {
+            playSound(100, 'sawtooth', 0.1, 0.08);
+        }
+
+        function updateMusic(type) {
+            if (currentMusicType === type) return;
+            currentMusicType = type;
+
+            if (musicInterval) clearInterval(musicInterval);
+
+            if (type === 'menu') {
+                const menuNotes = [329.63, 0, 392.00, 0, 440.00, 0, 392.00, 0];
+                let step = 0;
+                musicInterval = setInterval(() => {
+                    if (gameActive) return;
+                    if (menuNotes[step % menuNotes.length] > 0) {
+                        playSound(menuNotes[step % menuNotes.length], 'triangle', 0.8, 0.03);
+                    }
+                    step++;
+                }, 600);
+            } else if (type === 'game') {
+                const gameNotes = [261.63, 261.63, 392.00, 392.00, 440.00, 440.00, 392.00, 0, 349.23, 349.23, 329.63, 329.63, 293.66, 293.66, 261.63, 0];
+                let step = 0;
+                musicInterval = setInterval(() => {
+                    if (!gameActive) return;
+                    const freq = gameNotes[step % gameNotes.length];
+                    if (freq > 0) {
+                        playSound(freq, 'square', 0.2, 0.03);
+                        if (step % 2 === 0) playSound(freq / 2, 'sine', 0.2, 0.05);
+                    }
+                    if (step % 4 === 0) playSound(50, 'sawtooth', 0.05, 0.04);
+                    step++;
+                }, 150);
+            }
+        }
+
         const container = document.getElementById('game-container');
         const cloudsContainer = document.getElementById('clouds-container');
         const flowersContainer = document.getElementById('flowers-container');
@@ -285,6 +393,8 @@
         highScoreUI.innerText = highScore;
 
         function createEnvironment() {
+            cloudsContainer.innerHTML = '';
+            flowersContainer.innerHTML = '';
             for (let i = 0; i < 5; i++) {
                 const cloud = document.createElement('div');
                 cloud.className = 'cloud';
@@ -318,6 +428,7 @@
 
         function showMainMenu() {
             gameActive = false;
+            updateMusic('menu');
             overlay.style.display = 'flex';
             overlay.innerHTML = `
             <h1 class="game-title">AnimalClick</h1>
@@ -335,7 +446,11 @@
             
             <button id="start-btn" class="btn">¡JUGAR AHORA!</button>
         `;
-            document.getElementById('start-btn').onclick = startGame;
+            document.getElementById('start-btn').onclick = () => {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                playBtnSound();
+                startGame();
+            };
         }
 
         function createEntity(forceItem = false) {
@@ -382,9 +497,7 @@
             container.appendChild(entity);
 
             let effectiveSpeed = type.speed;
-            if (type.type === 'item') {
-                effectiveSpeed = type.speed + (clocksCaught * 0.4);
-            }
+            if (type.type === 'item') effectiveSpeed = type.speed + (clocksCaught * 0.4);
 
             const baseDuration = type.type === 'item' ? 10000 : 11000;
             const duration = (baseDuration / effectiveSpeed) + (Math.random() * 1000);
@@ -423,6 +536,7 @@
                 if (!gameActive) return;
                 health--;
                 if (health > 0) {
+                    playHitSound();
                     const fill = entity.querySelector('.health-fill');
                     if (fill) fill.style.width = `${(health / type.clicks) * 100}%`;
                     entity.classList.remove('shake');
@@ -430,6 +544,9 @@
                     entity.classList.add('shake');
                     return;
                 }
+
+                playCaptureSound(type.type);
+
                 if (type.type === 'item') {
                     clocksCaught++;
                     timeLeft += 5;
@@ -471,6 +588,8 @@
             overlay.style.display = 'none';
             timerEl.classList.remove('text-red-500');
 
+            updateMusic('game');
+
             document.querySelectorAll('.animal').forEach(a => a.remove());
 
             spawnInterval = setInterval(() => {
@@ -494,6 +613,10 @@
             clearInterval(gameInterval);
             clearInterval(spawnInterval);
 
+            [200, 150, 100].forEach((f, i) => {
+                setTimeout(() => playSound(f, 'sawtooth', 0.6, 0.1), i * 150);
+            });
+
             if (score > highScore) {
                 highScore = score;
                 localStorage.setItem('animalclick-highscore', highScore);
@@ -513,11 +636,23 @@
         `;
             overlay.style.display = 'flex';
 
-            document.getElementById('restart-btn').onclick = startGame;
-            document.getElementById('main-menu-btn').onclick = showMainMenu;
+            document.getElementById('restart-btn').onclick = () => {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                playBtnSound();
+                startGame();
+            };
+            document.getElementById('main-menu-btn').onclick = () => {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                playBtnSound();
+                showMainMenu();
+            };
         }
 
-        // Inicializar el juego con la pantalla principal
+        window.addEventListener('click', () => {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            if (!gameActive && currentMusicType !== 'menu') updateMusic('menu');
+        }, { once: false });
+
         showMainMenu();
     </script>
 
